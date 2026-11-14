@@ -2,6 +2,7 @@ from pathlib import Path
 import json
 
 from .domain import explore, validate
+from .estimation import estimate as run_estimate
 from .storage import Store, fingerprint
 
 
@@ -35,6 +36,23 @@ class Workbench:
         result = explore(data, selection)
         return {"revision": revision, "selection": selection, "data_sha256": fingerprint(data), "view": result}
 
+    def estimate(self, body):
+        revision = body.get("revision", self.default_revision)
+        selection = body.get("selection", self.product["selection"])
+        if not isinstance(selection, dict):
+            raise ValueError("选择条件必须是对象")
+        data = self.store.dataset(revision)
+        scenario = body.get("scenario", {})
+        if scenario is not None and not isinstance(scenario, dict):
+            raise ValueError("人口情景必须是对象")
+        view = run_estimate(data, selection, scenario or {})
+        return {"revision": revision, "selection": view["selection"],
+                "scenario": view["scenario"], "data_sha256": fingerprint(data),
+                "view": view}
+
     def save(self, body):
-        result = self.inspect(body)
+        if body.get("kind") == "estimate":
+            result = self.estimate(body)
+        else:
+            result = self.inspect(body)
         return self.store.save(body.get("title", ""), result["revision"], result["selection"], result)

@@ -1,0 +1,16 @@
+README.md
+pyproject.toml
+neighborhood_need/__init__.py
+neighborhood_need/__main__.py
+neighborhood_need/domain.py
+neighborhood_need/estimation.py
+neighborhood_need/server.py
+neighborhood_need/service.py
+neighborhood_need/storage.py
+neighborhood_need/validation.py
+neighborhood_need.egg-info/PKG-INFO
+neighborhood_need.egg-info/SOURCES.txt
+neighborhood_need.egg-info/dependency_links.txt
+neighborhood_need.egg-info/top_level.txt
+tests/test_estimation.py
+tests/test_workbench.py

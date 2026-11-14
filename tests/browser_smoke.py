@@ -67,6 +67,58 @@ class BrowserWorkflow(unittest.TestCase):
                 worker.join()
                 server.server_close()
 
+    def test_small_area_estimate_workflow(self):
+        package = json.loads((ROOT / "package.json").read_text())
+        module = package["scripts"]["start"].split()[2]
+        server_module = importlib.import_module(module + ".server")
+        with tempfile.TemporaryDirectory() as state:
+            server = server_module.make_server(ROOT, state, port=0)
+            worker = threading.Thread(target=server.serve_forever, daemon=True)
+            worker.start()
+            try:
+                with sync_playwright() as runtime:
+                    browser = runtime.chromium.launch(headless=True)
+                    try:
+                        page = browser.new_page()
+                        errors = []
+                        page.on("pageerror", lambda error: errors.append(str(error)))
+                        page.goto("http://127.0.0.1:" + str(server.server_port), wait_until="networkidle")
+                        page.locator("#tab-estimate").click()
+                        self.assertTrue(page.locator("#estimate-panel").is_visible())
+                        page.locator("#sc-draws").fill("200")
+                        page.locator("#run-estimate").click()
+                        page.locator("#estimate-status").filter(has_text="已计算小域需求估计").wait_for(timeout=60000)
+                        self.assertEqual(page.locator("#estimate-rows tr").count(), 12)
+                        no_sample = page.locator("#estimate-rows tr.no-sample")
+                        self.assertEqual(no_sample.count(), 1)
+                        self.assertIn("无本地样本", no_sample.first.inner_text())
+                        self.assertIn("完整留出一个社区", page.locator("#loco-view").inner_text())
+                        self.assertEqual(page.locator("#cell-rows tr").count(), 96)
+                        # 保守情景改变缺口社区人口，结果随之变化
+                        page.locator("#sc-policy").select_option("conservative")
+                        page.locator("#run-estimate").click()
+                        page.locator("#estimate-status").filter(has_text="已计算小域需求估计").wait_for(timeout=60000)
+                        conservative_a10 = page.locator("#estimate-rows tr", has_text="A10").inner_text()
+                        self.assertIn("520", conservative_a10)
+                        # 保存估计并从存档读回，确认冻结
+                        page.locator("#title").fill("估计冻结记录")
+                        page.locator("#save-estimate").click()
+                        page.locator("#estimate-status").filter(has_text="已保存估计记录").wait_for()
+                        page.locator("#archive button").first.click()
+                        page.locator("#estimate-status").filter(has_text="已读取保存的估计").wait_for()
+                        frozen = json.loads(page.locator("#details").inner_text())
+                        self.assertEqual(frozen["scenario"]["unknown_policy"], "conservative")
+                        # 浏览页签的原有表格仍然可用
+                        page.locator("#tab-browse").click()
+                        self.assertGreater(page.locator("#rows tr").count(), 0)
+                        self.assertEqual(errors, [])
+                    finally:
+                        browser.close()
+            finally:
+                server.shutdown()
+                worker.join()
+                server.server_close()
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

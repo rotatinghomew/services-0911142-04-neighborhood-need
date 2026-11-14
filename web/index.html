@@ -1,13 +1,46 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>街区服务需求估计站</title><link rel="stylesheet" href="/style.css"></head>
-<body><header><span>教研数据 · 复核工作区</span><h1>街区服务需求估计站</h1><p>街区样本与人口交叉单元</p></header>
+<body><header><span>教研数据 · 复核工作区</span><h1>街区服务需求估计站</h1><p>街区样本与人口交叉单元 · 小域需求估计</p></header>
 <main><aside><h2>数据与范围</h2><label>数据版本<select id="revision"></select></label><div id="controls"></div>
+<div class="tabs"><button id="tab-browse" class="tab active">资料浏览</button><button id="tab-estimate" class="tab">小域需求估计</button></div>
 <button id="inspect">查看所选范围</button><label>导入完整数据<input id="upload" type="file" accept=".json,application/json"></label>
 <button id="raw">查看原始记录</button><h2>分析记录</h2><label>记录名称<input id="title" value="本次复核"></label>
-<button id="save">保存当前描述</button><div id="archive"></div></aside>
+<button id="save">保存当前描述</button><button id="save-estimate">保存当前估计</button><div id="archive"></div></aside>
 <section><div id="status" role="status">正在读取本地数据…</div><div id="summary"></div>
+<div id="browse-panel">
 <h2>街区样本与人口交叉单元</h2><div id="notes"></div><canvas id="chart" width="960" height="300" aria-label="所选范围描述图"></canvas>
 <div class="table-wrap"><table><thead id="columns"></thead><tbody id="rows"></tbody></table></div>
+</div>
+<div id="estimate-panel" hidden>
+<h2>小域需求估计（多层回归+后分层）</h2>
+<div class="scenario">
+<h3>人口情景（可调整后重新计算）</h3>
+<label>全局人口系数<input id="sc-multiplier" type="number" step="0.05" min="0" value="1"></label>
+<label>缺口单元（unknown）策略<select id="sc-policy">
+<option value="average">均值插补+不确定性（默认）</option>
+<option value="conservative">保守：缺口按0，需另行补统</option>
+<option value="manual">手工给定（在下方填写）</option></select></label>
+<div id="sc-manual-wrap" hidden><label>缺口人口 JSON（键：社区|年龄|家庭|行动）<textarea id="sc-manual" rows="3"></textarea></label></div>
+<label>边界流向位置（留空=每次可行域内随机抽样）<input id="sc-position" type="number" step="0.1" min="0" max="1" placeholder="0至1，空为随机"></label>
+<label>蒙特卡洛次数<input id="sc-draws" type="number" step="50" min="50" max="2000" value="500"></label>
+<label>随机种子<input id="sc-seed" type="number" step="1" min="0" value="20261114"></label>
+<label class="check"><input id="sc-loco" type="checkbox" checked> 留出整个社区的预测检验（LOCO）</label>
+<button id="run-estimate">计算小域需求估计</button>
+</div>
+<div id="estimate-status"></div>
+<div id="estimate-cards" class="cards"></div>
+<h3>各社区：模型估计与直接估计并排</h3>
+<p id="estimate-note" class="hint"></p>
+<div class="table-wrap"><table id="estimate-table"><thead id="estimate-head"></thead><tbody id="estimate-rows"></tbody></table></div>
+<h3>信息来源与边界映射影响</h3>
+<div id="dependency-view" class="panel-box"></div>
+<h3>留出整个社区的预测检验</h3>
+<div id="loco-view" class="panel-box"></div>
+<h3>按年龄 / 家庭结构 / 行动便利程度的边际需求</h3>
+<div id="marginal-view" class="panel-box"></div>
+<h3>单元级追溯（人口单元状态、处理方式与模型需求）</h3>
+<div class="table-wrap"><table id="cell-table"><thead id="cell-head"></thead><tbody id="cell-rows"></tbody></table></div>
+</div>
 <h2 id="detail-heading">记录与依据</h2><pre id="details">点击记录行可查看详细字段。</pre><button id="export">导出当前记录</button>
-</section></main><footer>仅使用本地虚构记录；描述统计不替代研究设计与业务复核。</footer><script src="/app.js"></script></body></html>
+</section></main><footer>仅使用本地虚构记录；描述统计不替代研究设计与业务复核。无样本社区不包装为直接证据。</footer><script src="/app.js"></script></body></html>
