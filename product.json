@@ -1,0 +1,27 @@
+{
+  "name": "街区服务需求估计站",
+  "focus": "街区样本与人口交叉单元",
+  "options": [
+    [
+      "wave",
+      "调查轮次",
+      [
+        "spring",
+        "autumn"
+      ]
+    ],
+    [
+      "boundary",
+      "统计边界",
+      [
+        "old",
+        "new"
+      ]
+    ]
+  ],
+  "selection": {
+    "wave": "autumn",
+    "boundary": "new"
+  },
+  "purpose": "社会服务分析资料复核"
+}

@@ -1,0 +1,6 @@
+[project]
+name = "neighborhood-need"
+version = "0.1.0"
+description = "街区服务需求估计站"
+requires-python = ">=3.11"
+dependencies = []
